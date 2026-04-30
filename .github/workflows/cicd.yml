@@ -54,7 +54,7 @@ jobs:
 
     # Wait
     - name: Wait
-      run: sleep 15
+     # run: sleep 15
 
     # Test
     - name: Test
