@@ -12,15 +12,9 @@ jobs:
     - name: Checkout
       uses: actions/checkout@v4
 
-    # Install Docker
-    #- name: Install Docker
-    #  run: |
-    #    sudo apt-get update
-    #    sudo apt-get install -y docker.io
-
     # Build Docker image
     - name: Build Image
-      run: docker build -t open5gs-core .
+      run: docker build -t open5gs-core:latest .
 
     # Install kubectl
     - name: Install kubectl
@@ -40,11 +34,11 @@ jobs:
     - name: Create Cluster
       run: kind create cluster
 
-    # Load image
+    # Load image into KIND
     - name: Load Image
-      run: kind load docker-image open5gs-core
+      run: kind load docker-image open5gs-core:latest
 
-    # Deploy
+    # Deploy to Kubernetes
     - name: Deploy
       run: kubectl apply -f k8s/
 
@@ -52,9 +46,10 @@ jobs:
     - name: Debug Pods
       run: kubectl get pods -o wide
 
-    # Wait
-    - name: Wait
-     # run: sleep 15
+    # ✅ FIXED WAIT (IMPORTANT)
+    - name: Wait for Pod Ready
+      run: |
+        kubectl wait --for=condition=Ready pod -l app=open5gs --timeout=120s
 
     # Test
     - name: Test
@@ -65,5 +60,6 @@ jobs:
           echo "PASS ✅"
         else
           echo "FAIL ❌"
+          kubectl describe pod
           exit 1
         fi
