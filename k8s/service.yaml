@@ -9,4 +9,4 @@ spec:
   ports:
     - port: 38412
       targetPort: 38412
-      NodePort: 30007
+      nodePort: 30007
