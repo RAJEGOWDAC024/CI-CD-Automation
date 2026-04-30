@@ -9,60 +9,61 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout
-      uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
 
-    # Build Docker image
-    - name: Build Image
-      run: docker build -t open5gs-core:latest .
+      # Install Docker
+      # - name: Install Docker
+      #   run: |
+      #     sudo apt-get update
+      #     sudo apt-get install -y docker.io
 
-    # Install kubectl
-    - name: Install kubectl
-      run: |
-        curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
-        chmod +x kubectl
-        sudo mv kubectl /usr/local/bin/
+      # Build Docker image
+      - name: Build Image
+        run: docker build -t open5gs-core .
 
-    # Install KIND
-    - name: Install KIND
-      run: |
-        curl -Lo ./kind https://kind.sigs.k8s.io/dl/latest/kind-linux-amd64
-        chmod +x ./kind
-        sudo mv ./kind /usr/local/bin/kind
+      # Install kubectl
+      - name: Install kubectl
+        run: |
+          curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+          chmod +x kubectl
+          sudo mv kubectl /usr/local/bin/
 
-    # Create cluster
-    - name: Create Cluster
-      run: kind create cluster
+      # Install KIND
+      - name: Install KIND
+        run: |
+          curl -Lo ./kind https://kind.sigs.k8s.io/dl/latest/kind-linux-amd64
+          chmod +x ./kind
+          sudo mv ./kind /usr/local/bin/kind
 
-    # Load image into KIND
-    - name: Load Image
-      run: kind load docker-image open5gs-core:latest
+      # Create cluster
+      - name: Create Cluster
+        run: kind create cluster
 
-    # Deploy to Kubernetes
-    - name: Deploy
-      run: kubectl apply -f k8s/
+      # Load image
+      - name: Load Image
+        run: kind load docker-image open5gs-core
 
-    # Debug
-    - name: Debug Pods
-      run: kubectl get pods -o wide
+      # Deploy
+      - name: Deploy
+        run: kubectl apply -f k8s/
 
-    - name: Wait for Pod Ready
-      run: |
-        kubectl get pods
-        kubectl wait --for=condition=Ready pod -l app=open5gs --timeout=180s || true
+      # Debug
+      - name: Debug Pods
+        run: kubectl get pods -o wide
 
-    - name: Debug if Failed
-      run: |
-        kubectl get pods
-        kubectl describe pods
+      # Wait
+      - name: Wait
+        run: sleep 15
 
-    - name: Test
-      run: |
-        if kubectl get pods | grep -q Running
-        then
-          echo "PASS ✅"
-        else
-          echo "FAIL ❌"
-          kubectl logs $(kubectl get pods -o jsonpath='{.items[0].metadata.name}')
-          exit 1
-        fi
+      # Test
+      - name: Test
+        run: |
+          kubectl get pods
+          if kubectl get pods | grep -q Running
+          then
+            echo "PASS ✅"
+          else
+            echo "FAIL ❌"
+            exit 1
+          fi
