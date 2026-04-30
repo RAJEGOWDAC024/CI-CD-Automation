@@ -15,3 +15,6 @@ spec:
       containers:
       - name: open5gs
         image: open5gs-core
+        imagePullPolicy: Never
+        ports:
+        - containerPort: 38412
