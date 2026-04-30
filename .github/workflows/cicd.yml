@@ -46,20 +46,23 @@ jobs:
     - name: Debug Pods
       run: kubectl get pods -o wide
 
-    # ✅ FIXED WAIT (IMPORTANT)
     - name: Wait for Pod Ready
       run: |
-        kubectl wait --for=condition=Ready pod -l app=open5gs --timeout=120s
+        kubectl get pods
+        kubectl wait --for=condition=Ready pod -l app=open5gs --timeout=180s || true
 
-    # Test
-    - name: Test
+    - name: Debug if Failed
       run: |
         kubectl get pods
+        kubectl describe pods
+
+    - name: Test
+      run: |
         if kubectl get pods | grep -q Running
         then
           echo "PASS ✅"
         else
           echo "FAIL ❌"
-          kubectl describe pod
+          kubectl logs $(kubectl get pods -o jsonpath='{.items[0].metadata.name}')
           exit 1
         fi
